@@ -1,0 +1,197 @@
+
+<!Doctype html>
+<html lang="en">
+<head>
+    <title>Todo List</title>
+    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react-dom.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+    #container{
+        text-align: center;
+        height: auto;
+        width: 500px;
+        background-color: #bed2e7;
+        padding: 20px;
+    }
+    ul{
+        width: auto;
+        background-color: #eeeeee;
+        margin: 10px;
+        list-style-type: none;
+        font-size: 20px;
+    }
+    li{
+        padding: 12px 5px;
+        margin-top: 0px;
+        text-align: left;
+    }
+    .edit, .close, .submit {
+        background-color: #8a2be2;
+        border: none;
+        color: white;
+        padding: 12px 12px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 5px 12px;
+        -webkit-transition-duration: 0.4s;
+        transition-duration: 0.4s;
+        cursor: pointer;
+    }
+    .edit,.close{
+        float: right;
+        margin: -5px 5px;
+        padding: 8px 10px;
+    }
+    .close:hover {
+        background-color: #794044;
+        color: white;
+    }
+
+    .submit:hover {
+        background-color: #794044;
+        color: white;
+    }
+
+    .edit:hover {
+        background-color: #794044;
+        color: white;
+    }
+    .inputfield{
+        padding: 5px 12px;
+        margin: 5px 12px;
+        font-size: 16px;
+        width: 300px;
+        height: 30px;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+
+</style>
+</head>
+<body>
+    <div id="container"></div>
+    <script type="text/babel">
+    var listItem = [];
+    listItem.push({index: 1, value: "Welcome to Todo List"});
+    class TodoList extends React.Component {
+        render () {
+            var items = this.props.items.map((item, index) => {
+                return (
+                    <TodoListItem key={index} item={item} index={index} editItem={this.props.editItem}  removeItem={this.props.removeItem} />
+                );
+            });
+            return (
+                <ul className="list-group"> {items} </ul>
+            );
+        }
+    }
+
+    class TodoListItem extends React.Component {
+        constructor(props) {
+            super(props);
+        }
+        onClickClose() {
+            var index = parseInt(this.props.index);
+            this.props.removeItem(index);
+        }
+        onClickEdit() {
+            this.props.editItem(this.props.item.value, this.props.item.index);
+        }
+        render () {
+            return(
+                <li>
+                {this.props.item.value}
+                <button type="button" className="close" onClick={this.onClickClose.bind(this)}>&times;</button>
+                <button type="button" className="edit" onClick={this.onClickEdit.bind(this)}>Edit</button>
+                </li>
+            );
+        }
+    }
+
+    class TodoApp extends React.Component {
+        constructor (props) {
+            super(props);
+            this.addItem = this.addItem.bind(this);
+            this.removeItem = this.removeItem.bind(this);
+            this.editItem = this.editItem.bind(this);
+            this.onSubmit = this.onSubmit.bind(this);
+            this.state = {
+                listItem: listItem,
+                itemTodo: "",
+                button: "Add",
+                editItemid: null
+            }
+        }
+        componentDidMount() {
+            this.refs.itemName.focus();
+        }
+        onSubmit(event) {
+            event.preventDefault();
+            var newItemValue = this.refs.itemName.value;
+            if(newItemValue) {
+                if(this.state.button == "Edit"){
+                    var index = this.state.editItemid;
+                    for (var i in listItem){
+                        if(listItem[i].index == index){
+                            listItem[i].value = newItemValue;
+                        }
+                    }
+                    this.setState({button: "Add", itemTodo: ""});
+                }
+                else
+                {
+                    this.setState({itemTodo: "" });
+                    if(newItemValue != null){this.addItem({newItemValue});}
+                    this.refs.form.reset();
+                }
+            }
+        }
+        addItem(todoItem) {
+            if(todoItem)
+            listItem.unshift({
+                index: listItem.length+1,
+                value: todoItem.newItemValue,
+            });
+            this.setState({listItem: listItem});
+        }
+        removeItem (itemIndex) {
+            listItem.splice(itemIndex, 1);
+            this.setState({listItem: listItem});
+        }
+        editItem(todoitem,index){
+            console.log(todoitem);
+            console.log(index);
+            if(this.state.button == "Add"){
+                this.setState({button: "Edit"})
+            }
+            this.setState({
+                itemTodo : todoitem,
+                editItemid : index
+            });
+        }
+        onStateChange = (event) => {
+            this.setState({itemTodo: event.target.value});
+        }
+        render() {
+            return (
+                <div id="main">
+                <h1>Todo List</h1>
+                <form ref="form" onSubmit={this.onSubmit}>
+                <input className="inputfield" placeholder="Add item" type="text" ref="itemName" value={this.state.itemTodo} onChange={this.onStateChange}/>
+                <button type="submit" className="submit">{this.state.button}</button>
+                </form>
+                <TodoList items={this.props.initItems} removeItem={this.removeItem} editItem={this.editItem}/>
+                </div>
+            );
+        }
+    }
+
+    ReactDOM.render(<TodoApp initItems={listItem}/>, document.getElementById('container'));
+    </script>
+</body>
+</html>
